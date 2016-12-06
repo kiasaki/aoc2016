@@ -34,7 +34,7 @@ func (a LetterCounts) Swap(i, j int) {
 }
 func (a LetterCounts) Less(i, j int) bool {
 	// Sort by count (desc)
-	return a[i].Count > a[j].Count
+	return a[i].Count < a[j].Count
 }
 
 const inputFilename = "input"
