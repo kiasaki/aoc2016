@@ -10,6 +10,7 @@ import (
 )
 
 const inputFilename = "input"
+const targetRoomName = "northpole object storage"
 
 type LetterCount struct {
 	Letter rune
@@ -47,6 +48,7 @@ func (a LetterCounts) Less(i, j int) bool {
 
 type Room struct {
 	NameLetters LetterCounts
+	NameParts   []string
 	Number      int
 	Checksum    string
 }
@@ -66,6 +68,7 @@ func NewRoom(definition string) Room {
 	// Create a room object just missing room letter counts
 	room := Room{
 		NameLetters: NewLetterCounts(),
+		NameParts:   parts[:len(parts)-2],
 		Number:      number,
 		Checksum:    parts[len(parts)-1],
 	}
@@ -93,6 +96,21 @@ func (r Room) IsValid() bool {
 	return checksum == r.Checksum
 }
 
+func (r Room) DecryptedName() string {
+	nameParts := make([]string, len(r.NameParts))
+	copy(nameParts, r.NameParts)
+
+	for i, part := range r.NameParts {
+		partLetters := strings.Split(part, "")
+		for j, letter := range partLetters {
+			partLetters[j] = string((((int(letter[0]) - int('a')) + r.Number) % 26) + int('a'))
+		}
+		nameParts[i] = strings.Join(partLetters, "")
+	}
+
+	return strings.Join(nameParts, " ")
+}
+
 func main() {
 	var contents []byte
 	var err error
@@ -108,13 +126,14 @@ func main() {
 		rooms = append(rooms, NewRoom(row))
 	}
 
-	// Filter and sum valid room numbers
-	var validRoomNumberSum int
+	// Find the right room
 	for _, room := range rooms {
-		if room.IsValid() {
-			validRoomNumberSum += room.Number
+		if room.IsValid() && room.DecryptedName() == targetRoomName {
+			fmt.Println(room)
+			fmt.Printf("%v room number: %v\n", targetRoomName, room.Number)
+			return
 		}
 	}
 
-	fmt.Printf("Valid room number sum: %v\n", validRoomNumberSum)
+	fmt.Println("Couln't find the target room")
 }
